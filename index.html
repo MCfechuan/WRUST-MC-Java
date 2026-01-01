@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wurst客户端下载器</title>
+    <style>
+        :root {
+            --minecraft-green: #3b8526;
+            --minecraft-dark-green: #2a631c;
+            --minecraft-light-green: #5aad35;
+            --minecraft-gray: #4a4a4a;
+            --minecraft-dark-gray: #2d2d2d;
+            --minecraft-light-gray: #c6c6c6;
+            --minecraft-white: #f0f0f0;
+            --minecraft-red: #c62d2d;
+            --minecraft-blue: #1e90ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--minecraft-dark-gray) 0%, var(--minecraft-gray) 100%);
+            color: var(--minecraft-white);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: rgba(45, 45, 45, 0.95);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+            border: 2px solid var(--minecraft-green);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--minecraft-light-green);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .subtitle {
+            color: var(--minecraft-light-gray);
+            font-size: 1.2rem;
+        }
+        
+        .download-section {
+            background-color: var(--minecraft-dark-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid var(--minecraft-green);
+        }
+        
+        .section-title {
+            color: var(--minecraft-light-green);
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .version-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .version-selector label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        select {
+            padding: 12px 15px;
+            background-color: var(--minecraft-gray);
+            color: var(--minecraft-white);
+            border: 1px solid var(--minecraft-green);
+            border-radius: 5px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        select:focus {
+            border-color: var(--minecraft-light-green);
+            box-shadow: 0 0 0 2px rgba(90, 173, 53, 0.3);
+        }
+        
+        .download-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(58, 133, 38, 0.2);
+            border-radius: 5px;
+            border-left: 4px solid var(--minecraft-green);
+            display: none;
+        }
+        
+        .download-info p {
+            margin-bottom: 8px;
+        }
+        
+        .download-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to bottom, var(--minecraft-green), var(--minecraft-dark-green));
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            display: none;
+        }
+        
+        .download-btn:hover {
+            background: linear-gradient(to bottom, var(--minecraft-light-green), var(--minecraft-green));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .download-btn:active {
+            transform: translateY(0);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: var(--minecraft-gray);
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, var(--minecraft-green), var(--minecraft-light-green));
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .instructions {
+            background-color: var(--minecraft-dark-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+            border: 1px solid var(--minecraft-green);
+        }
+        
+        .instructions h3 {
+            color: var(--minecraft-light-green);
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--minecraft-light-gray);
+            font-size: 0.9rem;
+        }
+        
+        .warning {
+            color: var(--minecraft-red);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .version-list {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .version-item {
+            background-color: var(--minecraft-gray);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .version-item:hover {
+            background-color: var(--minecraft-dark-gray);
+            border-color: var(--minecraft-green);
+        }
+        
+        .version-item.active {
+            background-color: rgba(58, 133, 38, 0.3);
+            border-color: var(--minecraft-green);
+        }
+        
+        .search-box {
+            margin-bottom: 15px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--minecraft-gray);
+            color: var(--minecraft-white);
+            border: 1px solid var(--minecraft-green);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .version-list {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Wurst客户端下载器</h1>
+            <p class="subtitle">选择您的Minecraft版本并下载对应的Wurst客户端</p>
+        </header>
+        
+        <section class="download-section">
+            <h2 class="section-title">下载Wurst客户端</h2>
+            
+            <div class="version-selector">
+                <label for="mc-version">选择Minecraft版本：</label>
+                <select id="mc-version">
+                    <option value="">请选择Minecraft版本</option>
+                </select>
+                
+                <div class="search-box">
+                    <input type="text" id="version-search" placeholder="搜索Minecraft版本...">
+                </div>
+                
+                <div class="version-list" id="version-list">
+                    <!-- 版本列表将由JavaScript动态生成 -->
+                </div>
+                
+                <div class="download-info" id="download-info">
+                    <p><strong>版本信息：</strong> <span id="version-info">-</span></p>
+                    <p><strong>文件大小：</strong> <span id="file-size">-</span></p>
+                    <p><strong>文件类型：</strong> <span id="file-type">-</span></p>
+                </div>
+                
+                <a href="#" class="download-btn" id="download-btn">下载Wurst客户端</a>
+                
+                <div class="progress-bar" id="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="instructions">
+            <h3>安装说明</h3>
+            <ol>
+                <li>下载与您Minecraft版本对应的Wurst客户端</li>
+                <li>确保您已安装Java运行环境（JRE）</li>
+                <li>将下载的Wurst客户端文件放入Minecraft的mods文件夹</li>
+                <li>启动Minecraft并选择Wurst配置文件</li>
+                <li>开始享受Wurst客户端带来的功能！</li>
+            </ol>
+            <p class="warning">注意：请仅在自己的世界或允许的服务器上使用Wurst客户端。</p>
+        </section>
+        
+        <footer class="footer">
+            <p>Wurst客户端下载器 &copy; 2023 | 数据来源：Wurst-download.json</p>
+        </footer>
+    </div>
+
+    <script>
+        // Wurst客户端下载数据
+        const wurstDownloads = {
+            "Minecraft 1.21.11": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.51.3/Wurst-Client-v7.51.3-MC1.21.11.jar",
+            "Minecraft 1.21.8": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.51.2/Wurst-Client-v7.51.2-MC1.21.8.jar",
+            "Minecraft 1.21.4": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.47/Wurst-Client-v7.47-MC1.21.4.jar",
+            "Minecraft 1.21.1": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.51.2/Wurst-Client-v7.51.2-MC1.21.1.jar",
+            "Minecraft 1.20.1": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.35.2/Wurst-Client-v7.35.2-MC1.20.1.jar",
+            "Minecraft 1.20": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.35.2/Wurst-Client-v7.35.2-MC1.20.jar",
+            "Minecraft 1.19.4": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.35.2/Wurst-Client-v7.35.2-MC1.19.4.jar",
+            "Minecraft 1.19.2": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.35.2/Wurst-Client-v7.35.2-MC1.19.2.jar",
+            "Minecraft 1.18.2": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.25/Wurst-Client-v7.25-MC1.18.2.jar",
+            "Minecraft 1.18.1": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.25/Wurst-Client-v7.25-MC1.18.1.jar",
+            "Minecraft 1.17.1": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.25/Wurst-Client-v7.25-MC1.17.1.jar",
+            "Minecraft 1.7": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v1.3.1/Wurst-Client-v1.3.1-MC1.7.zip",
+            "Minecraft 1.8": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v6.35.3/Wurst-Client-v6.35.3-MC1.8.zip",
+            "Minecraft 1.9": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v6.28.1/Wurst-Client-v6.28.1-MC1.9.zip",
+            "Minecraft 1.10": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v6.28.1/Wurst-Client-v6.28.1-MC1.10.zip",
+            "Minecraft 1.11": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v6.28.1/Wurst-Client-v6.28.1-MC1.11.zip",
+            "Minecraft 1.16.5": "https://github.com/Wurst-Imperium/Wurst-MCX2/releases/download/v7.35.1/Wurst-Client-v7.35.1-MC1.16.5.jar"
+        };
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            const versionSelect = document.getElementById('mc-version');
+            const versionList = document.getElementById('version-list');
+            const downloadInfo = document.getElementById('download-info');
+            const downloadBtn = document.getElementById('download-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const progress = document.getElementById('progress');
+            const versionSearch = document.getElementById('version-search');
+            
+            // 提取版本号用于排序
+            const versions = Object.keys(wurstDownloads);
+            
+            // 版本排序函数
+            function versionSort(a, b) {
+                const aParts = a.split(' ')[1].split('.').map(Number);
+                const bParts = b.split(' ')[1].split('.').map(Number);
+                
+                for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                    const aPart = aParts[i] || 0;
+                    const bPart = bParts[i] || 0;
+                    
+                    if (aPart !== bPart) {
+                        return bPart - aPart; // 降序排列，最新版本在前
+                    }
+                }
+                return 0;
+            }
+            
+            // 排序版本
+            versions.sort(versionSort);
+            
+            // 填充下拉菜单和版本列表
+            versions.forEach(version => {
+                // 添加到下拉菜单
+                const option = document.createElement('option');
+                option.value = version;
+                option.textContent = version;
+                versionSelect.appendChild(option);
+                
+                // 添加到版本列表
+                const versionItem = document.createElement('div');
+                versionItem.className = 'version-item';
+                versionItem.textContent = version.split(' ')[1];
+                versionItem.dataset.version = version;
+                
+                versionItem.addEventListener('click', function() {
+                    // 移除所有active类
+                    document.querySelectorAll('.version-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // 添加active类到当前项
+                    this.classList.add('active');
+                    
+                    // 设置下拉菜单的值
+                    versionSelect.value = this.dataset.version;
+                    
+                    // 更新下载信息
+                    updateDownloadInfo(this.dataset.version);
+                });
+                
+                versionList.appendChild(versionItem);
+            });
+            
+            // 下拉菜单变化事件
+            versionSelect.addEventListener('change', function() {
+                if (this.value) {
+                    // 更新版本列表的选中状态
+                    document.querySelectorAll('.version-item').forEach(item => {
+                        item.classList.remove('active');
+                        if (item.dataset.version === this.value) {
+                            item.classList.add('active');
+                        }
+                    });
+                    
+                    updateDownloadInfo(this.value);
+                } else {
+                    downloadInfo.style.display = 'none';
+                    downloadBtn.style.display = 'none';
+                }
+            });
+            
+            // 搜索框事件
+            versionSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                document.querySelectorAll('.version-item').forEach(item => {
+                    const versionText = item.dataset.version.toLowerCase();
+                    if (versionText.includes(searchTerm)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 下载按钮点击事件
+            downloadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (!this.href || this.href === '#') return;
+                
+                // 显示进度条
+                progressBar.style.display = 'block';
+                progress.style.width = '0%';
+                
+                // 模拟下载进度
+                let width = 0;
+                const interval = setInterval(() => {
+                    if (width >= 100) {
+                        clearInterval(interval);
+                        
+                        // 下载完成，创建下载链接
+                        const link = document.createElement('a');
+                        link.href = this.href;
+                        link.download = this.href.split('/').pop();
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // 隐藏进度条
+                        setTimeout(() => {
+                            progressBar.style.display = 'none';
+                        }, 1000);
+                    } else {
+                        width += Math.random() * 10;
+                        if (width > 100) width = 100;
+                        progress.style.width = width + '%';
+                    }
+                }, 100);
+            });
+            
+            // 更新下载信息的函数
+            function updateDownloadInfo(version) {
+                const url = wurstDownloads[version];
+                const fileName = url.split('/').pop();
+                const fileExtension = fileName.split('.').pop();
+                
+                // 提取Wurst版本号
+                const wurstVersionMatch = url.match(/v\d+\.\d+(\.\d+)?/);
+                const wurstVersion = wurstVersionMatch ? wurstVersionMatch[0] : '未知';
+                
+                // 更新信息显示
+                document.getElementById('version-info').textContent = `${version} - Wurst ${wurstVersion}`;
+                document.getElementById('file-type').textContent = fileExtension.toUpperCase() + ' 文件';
+                
+                // 模拟文件大小（实际应用中可以通过HEAD请求获取）
+                const fileSize = Math.floor(Math.random() * 5) + 2; // 2-6 MB
+                document.getElementById('file-size').textContent = `${fileSize} MB`;
+                
+                // 更新下载按钮
+                downloadBtn.href = url;
+                downloadBtn.textContent = `下载 ${fileName}`;
+                
+                // 显示下载信息和按钮
+                downloadInfo.style.display = 'block';
+                downloadBtn.style.display = 'block';
+            }
+            
+            // 默认选择最新版本
+            if (versions.length > 0) {
+                versionSelect.value = versions[0];
+                updateDownloadInfo(versions[0]);
+                
+                // 设置版本列表的默认选中
+                document.querySelector(`.version-item[data-version="${versions[0]}"]`).classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
